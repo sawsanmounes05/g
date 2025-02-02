@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  sd2example:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sd2example
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"  # Now opens on localhost:3000 in browser
+    volumes:
+      - .:/app  # Maps project folder to /app in the container
+    working_dir: /app
+    command: node index.js  # Ensures correct startup
+
+  web:
+    build:
+      context: ./
+    volumes:
+      - .:/src
+    working_dir: /src
+    command: node index.js  # Runs the main entry file
+    ports:
+      - "3001:3001"  # Runs web service separately
+    depends_on:
+      - db
+
+  db:
+    image: mysql
+    restart: always
+    platform: linux/amd64  # Ensures compatibility
+    env_file:
+      - ./.env
+    ports:
+      - "3306:3306"  # Standard MySQL port for database connections
+    volumes:
+      - ./db:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    platform: linux/amd64  # Ensures compatibility
+    env_file:
+      - ./.env
+    ports:
+      - "8081:80"  # Access phpMyAdmin at localhost:8081
+    depends_on:
+      - db
